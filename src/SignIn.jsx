@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { toast, ToastContainer } from 'react-toastify';
 import "react-toastify/dist/ReactToastify.css";
 import { getAuth, RecaptchaVerifier, signInWithPhoneNumber, PhoneAuthProvider, signInWithCredential } from 'firebase/auth';
@@ -24,7 +24,8 @@ const SignIn = () => {
     const [otp, setOtp] = useState('');
     const [accessToken, setAccessToken] = useState(null)
     const [user, setUser] = useState('')
-    const [loading , setLoading] = useState(false)
+    const recaptchaVerifierRef = useRef(null);
+
 
     const handlePhoneNumberSubmit = async (e) => {
         e.preventDefault();
@@ -36,14 +37,8 @@ const SignIn = () => {
         else {
             try {
                 const auth = getAuth();
-                const appVerifier = new RecaptchaVerifier('recaptcha-container', {
-                    size: 'invisible',
-                    callback: (e) => {
-                        console.log(e)
-                    }
-                }, auth);
 
-                await signInWithPhoneNumber(auth, phoneNumber, appVerifier)
+                await signInWithPhoneNumber(auth, phoneNumber, appVerifierrecaptchaVerifierRef.current)
                     .then((confirmationResult) => {
                         setVerificationId(confirmationResult.verificationId);
                         console.log('OTP sent. Verification ID:', confirmationResult.verificationId);
@@ -117,6 +112,14 @@ const SignIn = () => {
             setAccessToken(token)
             setUser(phoneNumber)
         }
+
+        recaptchaVerifierRef.current = new RecaptchaVerifier('recaptcha-container', {
+            size: 'invisible',
+            callback: (e) => {
+                console.log(e);
+            }
+        });
+
     }, [accessToken])
 
 
