@@ -7,12 +7,12 @@ import ReactLoading from 'react-loading';
 
 
 const firebaseConfig = {
-  apiKey: "AIzaSyA48M9ilBgFsW5ZpAWLvn5QvifWKDB_Uc4",
-  authDomain: "otpauthapp-69ead.firebaseapp.com",
-  projectId: "otpauthapp-69ead",
-  storageBucket: "otpauthapp-69ead.appspot.com",
-  messagingSenderId: "735036461566",
-  appId: "1:735036461566:web:d8bfe4873c9142e9c2b0af"
+    apiKey: "AIzaSyB0J8Y9GQmUsxPspW8KesI-2CcI6oYgByU",
+    authDomain: "fir-authapp-7dc87.firebaseapp.com",
+    projectId: "fir-authapp-7dc87",
+    storageBucket: "fir-authapp-7dc87.appspot.com",
+    messagingSenderId: "14376722030",
+    appId: "1:14376722030:web:3a051ea8e63b84f318107f"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -24,8 +24,6 @@ const SignIn = () => {
     const [otp, setOtp] = useState('');
     const [accessToken, setAccessToken] = useState(null)
     const [user, setUser] = useState('')
-    const recaptchaVerifierRef = useRef(null);
-
 
     const handlePhoneNumberSubmit = async (e) => {
         e.preventDefault();
@@ -36,9 +34,22 @@ const SignIn = () => {
         }
         else {
             try {
-                const auth = getAuth();
+                
+                const auth = getAuth();            
+                if(!window.recaptchaVerifier){
+                    window.recaptchaVerifier = new RecaptchaVerifier(
+                      "recaptcha-container",
+                      {
+                        size: "invisible",
+                      },
+                      auth
+                    );
+               }
+              window.recaptchaVerifier.render();
 
-                await signInWithPhoneNumber(auth, phoneNumber, appVerifierrecaptchaVerifierRef.current)
+
+
+                await signInWithPhoneNumber(auth, phoneNumber, window.recaptchaVerifier)
                     .then((confirmationResult) => {
                         setVerificationId(confirmationResult.verificationId);
                         console.log('OTP sent. Verification ID:', confirmationResult.verificationId);
@@ -52,6 +63,7 @@ const SignIn = () => {
                         toast.error(`${error}`, {
                             position: toast.POSITION.TOP_CENTER
                         });
+                        
                     });
             } catch (error) {
                 toast.error(`${error}`, {
@@ -112,14 +124,6 @@ const SignIn = () => {
             setAccessToken(token)
             setUser(phoneNumber)
         }
-
-        recaptchaVerifierRef.current = new RecaptchaVerifier('recaptcha-container', {
-            size: 'invisible',
-            callback: (e) => {
-                console.log(e);
-            }
-        });
-
     }, [accessToken])
 
 
@@ -138,7 +142,7 @@ const SignIn = () => {
             </form> : ""}
 
             {success & !accessToken ? <form className="form" onSubmit={handleSignInSubmit}>
-            <h3>Enter OTP Sent On You Mobile Phone To Sign In </h3>
+                <h3>Enter OTP Sent On You Mobile Phone To Sign In </h3>
                 <input
                     className="input-field"
                     type="text"
@@ -147,7 +151,7 @@ const SignIn = () => {
                     placeholder="Enter OTP"
                 />
                 <button className="btn" type="submit">Verify OTP</button>
-            </form> :""}
+            </form> : ""}
 
             {
                 accessToken ? (
