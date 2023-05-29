@@ -7,12 +7,12 @@ import ReactLoading from 'react-loading';
 
 
 const firebaseConfig = {
-    apiKey: "AIzaSyB0J8Y9GQmUsxPspW8KesI-2CcI6oYgByU",
-    authDomain: "fir-authapp-7dc87.firebaseapp.com",
-    projectId: "fir-authapp-7dc87",
-    storageBucket: "fir-authapp-7dc87.appspot.com",
-    messagingSenderId: "14376722030",
-    appId: "1:14376722030:web:3a051ea8e63b84f318107f"
+    apiKey: "AIzaSyA48M9ilBgFsW5ZpAWLvn5QvifWKDB_Uc4",
+  authDomain: "otpauthapp-69ead.firebaseapp.com",
+  projectId: "otpauthapp-69ead",
+  storageBucket: "otpauthapp-69ead.appspot.com",
+  messagingSenderId: "735036461566",
+  appId: "1:735036461566:web:55bc799d4bd5a941c2b0af"
 };
 
 const app = initializeApp(firebaseConfig);
