@@ -318,12 +318,12 @@ const SignIn = () => {
                 opacity : 0.2
             }
         .container {
+            margin-top: 2em;
           display: flex;
           flex-direction: column;
           align-items: center;
           justify-content: center;
-          height: 100vh;
-          background-image: url("https://wallpaperaccess.com/full/754632.jpg"); /* Replace with your background image */
+            background-image: url("https://wallpaperaccess.com/full/754632.jpg"); /* Replace with your background image */
           background-size: cover;
           backdrop-filter: blur(10px);
           background-color: rgba(0, 0, 0, 0.6); /* Adjust the opacity as desired */
