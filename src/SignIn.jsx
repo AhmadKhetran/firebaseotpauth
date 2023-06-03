@@ -264,13 +264,15 @@ const SignIn = () => {
 
             {
                 accessToken ? (
-                    <> <div className="signed-in-container">
-                        <p className="signed-in-message">You are signed in with this Phone Number: {user}</p>
-                        <button className="logout-button" onClick={handleLogout}>Log Out</button>
-                    </div>
-                        <div>
+                    <>
+                        <div className="signed-in-container">
+                            <p className="signed-in-message">You are signed in with this Phone Number: {user}</p>
+                            <button className="logout-button" onClick={handleLogout}>Log Out</button>
+                        </div>
+                        <div className="select-container">
+                            <h4>Please Select Reciever From Below User !</h4>
                             <select value={reciever} onChange={handleChange}>
-                                <option value="">Select an option</option>
+                                <option value="">Select Reciever</option>
                                 {recipients.map((option, index) => (
                                     <option key={index} value={option}>
                                         {option}
@@ -279,11 +281,11 @@ const SignIn = () => {
                             </select>
                             <p>Selected Receiver: {reciever}</p>
                         </div>
-                        <div>
+                        <div className="messages-container">
                             <h2>Messages</h2>
                             <ul>
                                 {messages.map((message) => (
-                                    <li key={message.id}>
+                                    <li key={message.id} className="message-item">
                                         <strong>From: </strong> {message.sender}
                                         <br />
                                         <strong>Message: </strong> {message.content}
@@ -296,13 +298,15 @@ const SignIn = () => {
                                     value={message}
                                     onChange={(e) => setMessage(e.target.value)}
                                     placeholder="Type your message"
+                                    className="input-field"
                                 />
-                                <button type="submit">Send</button>
+                                <button type="submit" className="send-button">Send</button>
                             </form>
                         </div>
                     </>
                 ) : null
             }
+
 
             <div id="recaptcha-container"></div>
 
@@ -358,6 +362,7 @@ const SignIn = () => {
           cursor: pointer;
         }
         .signed-in-container {
+            width: 50%;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -384,7 +389,88 @@ const SignIn = () => {
             border-radius: 4px;
             cursor: pointer;
           }
-          In the 
+          .select-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 20px;
+          }
+          
+          .select-container select {
+            padding: 10px;
+            border: none;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            width: 300px;
+            background-color: lightblue;
+            color: black;
+          }
+          
+          .select-container p {
+            color: black;
+            background: white;
+            padding: 0.7em;
+            border-radius: 1em
+          }
+          
+          .messages-container {
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 2em;
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 20px;
+          }
+          
+          .messages-container h2 {
+            color: red;
+            margin-bottom: 10px;
+          }
+          
+          .messages-container ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+          }
+          
+          .messages-container .message-item {
+            background-color: lightblue;
+            border-radius: 4px;
+            padding: 10px;
+            margin-bottom: 10px;
+            color: darkblue;
+          }
+          
+          .messages-container .message-item strong {
+            font-weight: bold;
+          }
+          
+          .messages-container form {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 20px;
+          }
+          
+          .messages-container form .input-field {
+            padding: 10px;
+            border: none;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            width: 300px;
+            background-color: lightblue;
+            color: black;
+          }
+          
+          .messages-container form .send-button {
+            padding: 10px 20px;
+            background-color: blue;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+          }
       `}</style>
         </div>
     );
