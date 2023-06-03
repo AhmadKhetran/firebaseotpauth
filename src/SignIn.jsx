@@ -1,18 +1,20 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { toast, ToastContainer } from 'react-toastify';
 import "react-toastify/dist/ReactToastify.css";
-import { getAuth, RecaptchaVerifier, signInWithPhoneNumber, PhoneAuthProvider, signInWithCredential } from 'firebase/auth';
+import { getAuth, RecaptchaVerifier, signInWithPhoneNumber, PhoneAuthProvider, signInWithCredential, onAuthStateChanged, signOut } from 'firebase/auth';
 import { initializeApp } from "firebase/app";
 import ReactLoading from 'react-loading';
+import { getFirestore, collection, addDoc, query, onSnapshot, where, getDocs } from 'firebase/firestore';
+
 
 
 const firebaseConfig = {
-    apiKey: "AIzaSyA5SEXZ2nWWJ1VxiU8cVCSgVdfFuZ_xu5M",
-    authDomain: "authapp2-e3a80.firebaseapp.com",
-    projectId: "authapp2-e3a80",
-    storageBucket: "authapp2-e3a80.appspot.com",
-    messagingSenderId: "1063149919884",
-    appId: "1:1063149919884:web:7a9ddd5e305b36d44ea5a9"
+    apiKey: "AIzaSyB0J8Y9GQmUsxPspW8KesI-2CcI6oYgByU",
+    authDomain: "fir-authapp-7dc87.firebaseapp.com",
+    projectId: "fir-authapp-7dc87",
+    storageBucket: "fir-authapp-7dc87.appspot.com",
+    messagingSenderId: "14376722030",
+    appId: "1:14376722030:web:646a11bfdea8ee3218107f"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -24,6 +26,11 @@ const SignIn = () => {
     const [otp, setOtp] = useState('');
     const [accessToken, setAccessToken] = useState(null)
     const [user, setUser] = useState('')
+    const [message, setMessage] = useState('')
+    const [messages, setMessages] = useState([]);
+    const [recipients, setRecipients] = useState([])
+    const [reciever, setReciever] = useState()
+
 
     const handlePhoneNumberSubmit = async (e) => {
         e.preventDefault();
@@ -34,18 +41,18 @@ const SignIn = () => {
         }
         else {
             try {
-                
-                const auth = getAuth();            
-                if(!window.recaptchaVerifier){
+
+                const auth = getAuth();
+                if (!window.recaptchaVerifier) {
                     window.recaptchaVerifier = new RecaptchaVerifier(
-                      "recaptcha-container",
-                      {
-                        size: "invisible",
-                      },
-                      auth
+                        "recaptcha-container",
+                        {
+                            size: "invisible",
+                        },
+                        auth
                     );
-               }
-              window.recaptchaVerifier.render();
+                }
+                window.recaptchaVerifier.render();
 
 
 
@@ -63,7 +70,7 @@ const SignIn = () => {
                         toast.error(`${error}`, {
                             position: toast.POSITION.TOP_CENTER
                         });
-                        
+
                     });
             } catch (error) {
                 toast.error(`${error}`, {
@@ -81,29 +88,43 @@ const SignIn = () => {
             const credential = PhoneAuthProvider.credential(verificationId, otp);
 
             await signInWithCredential(auth, credential)
-                .then((userCredential) => {
+                .then(async (userCredential) => {
                     // User signed in successfully
                     const user = userCredential.user;
-                    //console.log('User signed in:', user);
-                    localStorage.setItem("accesstoken", user.accessToken)
-                    localStorage.setItem("phoneNumber", user.phoneNumber)
-                    setAccessToken(user.accessToken)
-                    setUser(user.phoneNumber)
+                    localStorage.setItem("accesstoken", user.accessToken);
+                    localStorage.setItem("phoneNumber", user.phoneNumber);
+                    // Check if the user already exists in the 'users' collection
+                    const db = getFirestore();
+                    const usersCollection = collection(db, 'users');
+                    const querySnapshot = await getDocs(query(usersCollection, where('phoneNumber', '==', user.phoneNumber)));
+
+                    if (querySnapshot.empty) {
+                        // User doesn't exist, create a new document in the 'users' collection
+                        const newUser = {
+                            phoneNumber: user.phoneNumber,
+                            // Other user data you want to store
+                        };
+
+                        await addDoc(usersCollection, newUser);
+                        console.log('New user created:', user.phoneNumber);
+                    }
+
+                    // Store user data in localStorage or state
+
+                    setAccessToken(user.accessToken);
+                    setUser(user.phoneNumber);
+
                     toast.success("User signed in", {
                         position: toast.POSITION.TOP_CENTER
                     });
-
                 })
                 .catch((error) => {
-                    //console.error('Error signing in:', error);
                     toast.error(`${error}`, {
                         position: toast.POSITION.TOP_LEFT
                     });
                 });
         } catch (error) {
-            //console.error('Error initializing Firebase:', error);
-            // Handle the error case
-            toast.error(error)
+            toast.error(error);
         }
     };
 
@@ -112,19 +133,107 @@ const SignIn = () => {
         localStorage.removeItem('phoneNumber');
         setAccessToken(null)
         setSuccess(null)
-        toast.success("User Logged Out", {
-            position: toast.POSITION.TOP_LEFT
-        });
+        const auth = getAuth();
+        signOut(auth)
+            .then(() => {
+                toast.success("User Logged Out", {
+                    position: toast.POSITION.TOP_LEFT
+                });
+            })
+            .catch((error) => {
+                // An error occurred while signing out
+                // Handle the error case
+            });
     }
 
+    const handleMessageSubmit = async (e) => {
+        e.preventDefault()
+        // Create a reference to the messages collection in your database
+        const db = getFirestore();
+        const messagesCollection = collection(db, 'messages');
+
+        const newMessage = {
+            sender: user,
+            recipient: reciever,
+            content: message,
+            timestamp: new Date().toISOString(),
+        };
+
+        try {
+            // Add the new message document to the messages collection
+            const docRef = await addDoc(messagesCollection, newMessage);
+            console.log('Message sent:', docRef.id);
+            setMessage('');
+        } catch (error) {
+            console.error('Error sending message:', error);
+        }
+    };
+
+
+    const getUsers = async () => {
+        try {
+            const db = getFirestore();
+            const usersCollection = collection(db, 'users');
+            const querySnapshot = await getDocs(usersCollection);
+
+            const users = querySnapshot.docs.map((doc) => doc.data().phoneNumber);
+
+            console.log('Users:', users);
+            setRecipients(users)
+        } catch (error) {
+            console.error('Error fetching users:', error);
+        }
+    };
+
+
+
+
+
     useEffect(() => {
+
+        getUsers();
         const token = localStorage.getItem('accesstoken');
         const phoneNumber = localStorage.getItem('phoneNumber')
         if (token) {
             setAccessToken(token)
             setUser(phoneNumber)
         }
+
+        const auth = getAuth();
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                const { uid, displayName, email, phoneNumber } = user;
+                console.log(uid, displayName, email, phoneNumber);
+            } else {
+                // User is signed out
+            }
+        });
+
+        const db = getFirestore(app);
+        const messagesRef = collection(db, 'messages');
+        const messagesQuery = query(messagesRef, where('recipient', '==', user));
+
+        const unsubscribe = onSnapshot(messagesQuery, (snapshot) => {
+            const updatedMessages = snapshot.docs.map((doc) => ({
+                id: doc.id,
+                ...doc.data(),
+            }));
+
+            updatedMessages.sort((a, b) => b.timestamp - a.timestamp);
+            setMessages(updatedMessages);
+        });
+
+        return () => unsubscribe();
+
+
     }, [accessToken])
+
+    const handleChange = (e) => {
+        setReciever(e.target.value);
+        console.log(e.target.value)
+    };
+
 
 
     return (
@@ -155,10 +264,43 @@ const SignIn = () => {
 
             {
                 accessToken ? (
-                    <div className="signed-in-container">
+                    <> <div className="signed-in-container">
                         <p className="signed-in-message">You are signed in with this Phone Number: {user}</p>
                         <button className="logout-button" onClick={handleLogout}>Log Out</button>
                     </div>
+                        <div>
+                            <select value={reciever} onChange={handleChange}>
+                                <option value="">Select an option</option>
+                                {recipients.map((option, index) => (
+                                    <option key={index} value={option}>
+                                        {option}
+                                    </option>
+                                ))}
+                            </select>
+                            <p>Selected Receiver: {reciever}</p>
+                        </div>
+                        <div>
+                            <h2>Messages</h2>
+                            <ul>
+                                {messages.map((message) => (
+                                    <li key={message.id}>
+                                        <strong>From: </strong> {message.sender}
+                                        <br />
+                                        <strong>Message: </strong> {message.content}
+                                    </li>
+                                ))}
+                            </ul>
+                            <form onSubmit={handleMessageSubmit}>
+                                <input
+                                    type="text"
+                                    value={message}
+                                    onChange={(e) => setMessage(e.target.value)}
+                                    placeholder="Type your message"
+                                />
+                                <button type="submit">Send</button>
+                            </form>
+                        </div>
+                    </>
                 ) : null
             }
 
